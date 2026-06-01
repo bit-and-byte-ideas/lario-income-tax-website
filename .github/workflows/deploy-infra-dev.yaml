@@ -1,0 +1,26 @@
+name: Deploy Infrastructure (dev)
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: deploy-infra-dev-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  opentofu:
+    uses: bit-and-byte-ideas/azure-static-webapp-cicd-kit/.github/workflows/opentofu.yml@main
+    with:
+      working_directory: deploy/infra/dev
+      environment: dev
+    secrets:
+      AZURE_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID_DEV }}
+      AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID_DEV }}
+      TF_BACKEND_RESOURCE_GROUP: ${{ vars.TF_BACKEND_RESOURCE_GROUP }}
+      TF_BACKEND_STORAGE_ACCOUNT: ${{ vars.TF_BACKEND_STORAGE_ACCOUNT }}
+      TF_BACKEND_CONTAINER: ${{ vars.TF_BACKEND_CONTAINER_DEV }}
+      TF_BACKEND_KEY: ${{ vars.TF_BACKEND_KEY_DEV }}
