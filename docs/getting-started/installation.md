@@ -96,7 +96,7 @@ Update `src/styles.css` with the warm, professional color scheme:
 
 ### 5. Add Business Content
 
-Use the information from [project-info.md](project-info.md):
+Use the information from [project-info.md](../project-info.md):
 
 - Business name: Larios Income Tax
 - Address: 3317 El Cajon Blvd, San Diego, CA 92104
@@ -125,4 +125,4 @@ npm install
 - [Angular Documentation](https://angular.dev)
 - [Angular CLI Commands](https://angular.dev/tools/cli)
 - [Azure Static Web Apps Documentation](https://docs.microsoft.com/azure/static-web-apps/)
-- [project-info.md](project-info.md) - Detailed migration notes
+- [project-info.md](../project-info.md) - Detailed migration notes
