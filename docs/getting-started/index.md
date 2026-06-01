@@ -217,4 +217,4 @@ npm test
 - [Angular Documentation](https://angular.dev)
 - [Angular CLI Commands](https://angular.dev/tools/cli)
 - [TypeScript Handbook](https://www.typescriptlang.org/docs/)
-- [CLAUDE.md](../../CLAUDE.md) — AI development guidelines
+- `CLAUDE.md` in the project root — AI development guidelines

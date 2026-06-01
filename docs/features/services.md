@@ -204,4 +204,4 @@ No component changes would be needed — they already use the helper functions.
 
 - [Adding a New Service](../guides/adding-services.md) — Step-by-step guide
 - [Internationalization](../architecture/i18n.md) — Translation workflow
-- [CLAUDE.md Services Management](../../CLAUDE.md#services-management) — Technical reference
+- `CLAUDE.md` in the project root — Technical reference for services management

@@ -26,10 +26,10 @@ site at [lariosincometax.com](https://www.lariosincometax.com/).
 
 ## Quick Links
 
-- [Setup Guide](setup-guide.md) - Get started with local development
-- [Architecture](architecture.md) - Understand the project structure
-- [Code Quality](code-quality.md) - Code standards and tools
-- [Theme System](THEMES.md) - Toggle between color schemes
+- [Setup Guide](getting-started/installation.md) - Get started with local development
+- [Architecture](architecture/project-structure.md) - Understand the project structure
+- [Code Quality](guides/code-quality.md) - Code standards and tools
+- [Theme System](features/themes.md) - Toggle between color schemes
 
 ## Project Status
 
@@ -60,7 +60,7 @@ site at [lariosincometax.com](https://www.lariosincometax.com/).
 ## Getting Help
 
 - Browse documentation using the navigation menu
-- Check [Setup Guide](setup-guide.md) for installation
+- Check [Setup Guide](getting-started/installation.md) for installation
 - Review [Markdown Style Guide](markdown-style-guide.md) for contributing
 
 ## Version

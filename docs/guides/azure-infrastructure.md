@@ -7,7 +7,7 @@ Static Web Apps using Terraform and GitHub Actions.
 
 ## Architecture Diagram
 
-See [azure-infrastructure-diagram.drawio.xml](azure-infrastructure-diagram.drawio.xml) for the visual
+See the `azure-infrastructure-diagram.drawio.xml` file in the project repository for the visual
 infrastructure diagram that can be imported into Draw.IO.
 
 ```text
@@ -70,8 +70,7 @@ infrastructure diagram that can be imported into Draw.IO.
 
 ### CI/CD Pipeline
 
-See [ci-cd.md](ci-cd.md) and [cicd-flow-diagram.drawio.xml](cicd-flow-diagram.drawio.xml) for detailed CI/CD pipeline
-documentation and visual flow diagram.
+See [ci-cd.md](ci-cd.md) for detailed CI/CD pipeline documentation and the visual flow diagram.
 
 #### Deployment Pipeline
 
@@ -533,8 +532,8 @@ See `deploy/MIGRATION.md` in the repository root for complete migration document
 
 ## References
 
-- [Azure Deployment Setup Guide](azure-deployment-setup.md): Complete setup instructions
-- [Azure Deployment Checklist](azure-deployment-checklist.md): Pre and post-deployment checklists
+- [Azure Deployment Setup Guide](azure-deployment.md): Complete setup instructions
+- [Azure Deployment Checklist](azure-checklist.md): Pre and post-deployment checklists
 - [CI/CD Pipeline](ci-cd.md): Pipeline documentation
 - Migration Guide: See `deploy/MIGRATION.md` in repository root for App Services to Static Web Apps migration
 - Terraform Code: See `deploy/` directory in repository root for infrastructure code
