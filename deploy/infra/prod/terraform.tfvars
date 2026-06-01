@@ -1,8 +1,8 @@
-project_name         = "larios-income-tax"
+project_name         = "larios-income-tax-website"
 environment          = "prod"
-sku_tier             = "Standard"
-application_insights = true
-custom_domain        = "lariosincometax.com"
+sku_tier             = "Free"
+application_insights = false
+# custom_domain        = "lariosincometax.com"
 
 tags = {
   owner       = "bit-and-byte-ideas"

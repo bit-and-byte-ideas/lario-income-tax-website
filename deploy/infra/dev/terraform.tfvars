@@ -1,4 +1,4 @@
-project_name         = "larios-income-tax"
+project_name         = "larios-income-tax-website"
 environment          = "dev"
 sku_tier             = "Free"
 application_insights = false
