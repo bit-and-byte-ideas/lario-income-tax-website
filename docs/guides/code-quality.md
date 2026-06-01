@@ -67,7 +67,7 @@ npm run lint:md:fix      # Fix markdown issues
 - MD022: Missing blank lines around headings
 - MD032: Missing blank lines around lists
 
-See [Markdown Style Guide](markdown-style-guide.md) for details.
+See [Markdown Style Guide](../markdown-style-guide.md) for details.
 
 ### TypeScript
 
@@ -128,7 +128,7 @@ pre-commit autoupdate         # Update hooks
 git commit --no-verify -m "message"
 ```
 
-See [Pre-commit Setup](pre-commit-setup.md) for detailed documentation.
+See [Pre-commit Setup](pre-commit.md) for detailed documentation.
 
 ## Code Standards
 
@@ -363,5 +363,5 @@ npm audit fix            # Fix vulnerabilities
 - [TypeScript Handbook](https://www.typescriptlang.org/docs/handbook/intro.html)
 - [Prettier Documentation](https://prettier.io/docs/en/)
 - [markdownlint Rules](https://github.com/DavidAnson/markdownlint/blob/main/doc/Rules.md)
-- [Markdown Style Guide](markdown-style-guide.md)
-- [Pre-commit Setup](pre-commit-setup.md)
+- [Markdown Style Guide](../markdown-style-guide.md)
+- [Pre-commit Setup](pre-commit.md)

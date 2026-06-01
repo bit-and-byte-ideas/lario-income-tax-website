@@ -15,8 +15,8 @@
     "test": "ng test",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "lint:md": "markdownlint-cli2 \"**/*.md\" \"#node_modules\" \"#dist\" \"#.angular\"",
-    "lint:md:fix": "markdownlint-cli2 --fix \"**/*.md\" \"#node_modules\" \"#dist\" \"#.angular\""
+    "lint:md": "markdownlint-cli2 \"**/*.md\" \"#node_modules\" \"#dist\" \"#.angular\" \"#.claude/agents\"",
+    "lint:md:fix": "markdownlint-cli2 --fix \"**/*.md\" \"#node_modules\" \"#dist\" \"#.angular\" \"#.claude/agents\""
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx,css,scss,json,yaml,yml}": [

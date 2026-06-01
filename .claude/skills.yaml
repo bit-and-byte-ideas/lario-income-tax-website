@@ -277,6 +277,138 @@ skills:
       3. Include accessibility features (WCAG compliance)
       4. Add proper error messages in user-friendly language
 
+  add-translation:
+    description: 'End-to-end workflow for adding a new i18n string in both locales'
+    instructions: |
+      Add a translatable string to the bilingual codebase:
+
+      1. Ask the user for:
+         - The English text to add
+         - Where it lives (template file path or TypeScript file path)
+         - A description/context hint for translators (e.g. "Services|Tax Preparation title")
+
+      2. Add the i18n marker:
+         - In HTML templates: add `i18n="Context|Description"` attribute to the element
+           Example: `<h1 i18n="Hero|Main headline">Welcome</h1>`
+         - In TypeScript: use `$localize`:Context|Description:Text`
+           Example: `const text = $localize`:Services|Title:Tax Preparation`;`
+         - For attributes: use `i18n-<attr>` syntax
+           Example: `<img i18n-alt="Image|Alt text" alt="Office photo" />`
+
+      3. Extract updated translation units:
+         ```
+         npm run extract-i18n
+         ```
+         This updates `src/locale/messages.xlf`.
+
+      4. Add the Spanish translation in `src/locale/messages.es-MX.xlf`:
+         - Find the new `<trans-unit>` block (it will have no `<target>` yet)
+         - Add `<target>Spanish translation here</target>` after the `<source>` element
+         - Ask the user for the Spanish translation if they haven't provided it
+
+      5. Verify both locales build:
+         ```
+         npm run build:en
+         npm run build:es
+         ```
+
+      6. Run tests to confirm nothing broke:
+         ```
+         npm test 2>&1 & sleep 15 && pkill -f "ng test" && sleep 2
+         ```
+
+      7. Remind the user to commit both the source change and the updated XLF files together.
+
+  add-business-service:
+    description: 'Add a new tax/immigration service to the services catalog'
+    instructions: |
+      Add a new service entry to the centralized services catalog:
+
+      1. Ask the user for:
+         - Service ID (kebab-case, e.g. "notary-services")
+         - English title (e.g. "Notary Services")
+         - Duration (e.g. "30 min")
+         - Consultation text (usually "Free Consultation")
+         - Featured on home page? (true/false)
+         - Brief description (1-2 sentences for the services list page)
+         - Full description (3-5 sentences for the service detail page)
+         - Image filename (place in public/assets/images/ or use the placeholder)
+
+      2. Add the entry to `src/app/shared/constants/services.constants.ts`:
+         - Wrap ALL text fields in `$localize` with the format:
+           `$localize`:Services|<FieldType> for <ServiceName>:English text``
+         - Place it in the correct position in the array (featured services first)
+         - Example:
+           ```typescript
+           {
+             id: 'notary-services',
+             title: $localize`:Services|Notary Services title:Notary Services`,
+             image: '/assets/images/notary-services.avif',
+             duration: $localize`:Services|Notary Services duration:30 min`,
+             consultation: $localize`:Services|Notary Services consultation:Free Consultation`,
+             featured: false,
+             briefDescription: $localize`:Services|Notary Services brief description:Short description.`,
+             description: $localize`:Services|Notary Services full description:Long description.`,
+           }
+           ```
+
+      3. If an image was provided, confirm it is placed at `public/assets/images/<filename>`.
+         Otherwise use the placeholder: `/assets/images/larios_tax_logo_transparent.avif`
+
+      4. Extract i18n strings: `npm run extract-i18n`
+
+      5. Add Spanish translations for the new service's strings in `src/locale/messages.es-MX.xlf`
+         - There will be ~5 new trans-units (title, duration, consultation, briefDescription, description)
+         - Ask the user for the Spanish translations
+
+      6. Run tests (service count assertions may need updating):
+         ```
+         npm test 2>&1 & sleep 15 && pkill -f "ng test" && sleep 2
+         ```
+         - If tests fail due to hardcoded service counts, update them
+
+      7. Start dev server to visually verify: `npm run start:en`
+
+  check-missing-translations:
+    description: 'Find translation units in messages.xlf that are missing Spanish targets'
+    instructions: |
+      Audit the translation files for missing Spanish translations:
+
+      1. Parse both XLF files using Python:
+         ```
+         python3 -c "
+         import xml.etree.ElementTree as ET
+         from pathlib import Path
+
+         ns = {'x': 'urn:oasis:names:tc:xliff:document:1.2'}
+         src = ET.parse('src/locale/messages.xlf').getroot()
+         es  = ET.parse('src/locale/messages.es-MX.xlf').getroot()
+
+         src_units = {u.get('id'): u.find('x:source', ns).text
+                      for u in src.findall('.//x:trans-unit', ns)}
+         es_units  = {u.get('id'): u.find('x:target', ns)
+                      for u in es.findall('.//x:trans-unit', ns)}
+
+         missing = [(id, text) for id, text in src_units.items()
+                    if id not in es_units or es_units[id] is None]
+         print(f'{len(missing)} missing translations out of {len(src_units)} total')
+         for id, text in missing:
+             print(f'  ID: {id}')
+             print(f'  EN: {text}')
+             print()
+         "
+         ```
+
+      2. Report the count and list each missing unit with its English source text.
+
+      3. For each missing translation, ask the user if they want to provide the Spanish text now.
+         If yes, insert `<target>...</target>` after the `<source>` element in messages.es-MX.xlf.
+
+      4. After filling in translations, verify the Spanish build succeeds:
+         ```
+         npm run build:es
+         ```
+
 metadata:
   project: "Lario's Income Tax Website"
   framework: 'Angular 21'

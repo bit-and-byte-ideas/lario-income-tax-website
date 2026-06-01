@@ -42,7 +42,32 @@
       "Bash(npm run build:es:*)",
       "Bash(npm run build:i18n:*)",
       "Bash(npm run extract-i18n:*)",
-      "WebFetch(domain:green-bush-0c265bf0f.4.azurestaticapps.net)"
+      "WebFetch(domain:green-bush-0c265bf0f.4.azurestaticapps.net)",
+      "Bash(graphify export *)",
+      "Bash(graphify benchmark *)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "FILE=$(echo \"$CLAUDE_TOOL_INPUT\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print(d.get('file_path',''))\" 2>/dev/null); [[ \"$FILE\" =~ \\.(ts|html|scss)$ ]] && npx prettier --write \"$FILE\" 2>/dev/null || true"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "CHANGED=$(git diff --name-only 2>/dev/null; git diff --cached --name-only 2>/dev/null); if echo \"$CHANGED\" | grep -qE '\\.(ts|html)$'; then echo 'i18n: TypeScript/HTML files changed — run: npm run extract-i18n'; fi; if echo \"$CHANGED\" | grep -qE '^src/'; then echo 'Tests: src/ files changed — run: npm test'; fi"
+          }
+        ]
+      }
     ]
   }
 }

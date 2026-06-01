@@ -396,4 +396,4 @@ src/
 
 - [markdownlint rules](https://github.com/DavidAnson/markdownlint/blob/main/doc/Rules.md)
 - `.markdownlint.json` - Project configuration (in project root)
-- [pre-commit-setup.md](pre-commit-setup.md) - Pre-commit hook details
+- [pre-commit-setup.md](guides/pre-commit.md) - Pre-commit hook details

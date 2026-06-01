@@ -164,7 +164,7 @@ The application is automatically deployed to Azure Static Web Apps when:
 - **Development**: Push to `main` branch
 - **Production**: Create a GitHub release
 
-See [Azure Deployment Setup](azure-deployment-setup.md) for complete details.
+See [Azure Deployment Setup](azure-deployment.md) for complete details.
 
 **Manual deployment** (if needed):
 
@@ -374,7 +374,7 @@ git revert HEAD
 git push origin main
 ```
 
-See [Azure Deployment Checklist](azure-deployment-checklist.md) for emergency procedures.
+See [Azure Deployment Checklist](azure-checklist.md) for emergency procedures.
 
 ## CI/CD Pipeline
 
@@ -456,5 +456,5 @@ npm run build
 - [Deployment Documentation](https://angular.dev/tools/cli/deployment)
 - [Performance Optimization](https://web.dev/articles/vitals)
 - [Azure Static Web Apps Documentation](https://docs.microsoft.com/azure/static-web-apps/)
-- [Azure Deployment Setup](azure-deployment-setup.md)
+- [Azure Deployment Setup](azure-deployment.md)
 - [CI/CD Pipeline](ci-cd.md)

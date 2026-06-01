@@ -177,7 +177,7 @@ Configure these as organization or repository secrets:
    - Add as `AZURE_STATIC_WEB_APPS_API_TOKEN_DEV`
    - Repeat for prod environment
 
-See [Azure Deployment Setup](azure-deployment-setup.md) for complete setup instructions.
+See [Azure Deployment Setup](azure-deployment.md) for complete setup instructions.
 
 ## Workflow Details
 
@@ -657,7 +657,7 @@ When workflows fail:
 
 ## Deployment Architecture
 
-See [cicd-flow-diagram.drawio.xml](cicd-flow-diagram.drawio.xml) for the complete CI/CD flow diagram.
+See the `cicd-flow-diagram.drawio.xml` file in the project repository for the complete CI/CD flow diagram.
 
 ### Azure Static Web Apps Resources
 
@@ -745,6 +745,6 @@ If deployment fails or issues are found:
 - [Azure Static Web Apps Documentation](https://docs.microsoft.com/azure/static-web-apps/)
 - [Terraform Azure Provider](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs)
 - [Azure Infrastructure Architecture](azure-infrastructure.md)
-- [Azure Deployment Setup Guide](azure-deployment-setup.md)
-- [Azure Deployment Checklist](azure-deployment-checklist.md)
+- [Azure Deployment Setup Guide](azure-deployment.md)
+- [Azure Deployment Checklist](azure-checklist.md)
 - Workflow Files: See `.github/workflows/` directory in repository root
