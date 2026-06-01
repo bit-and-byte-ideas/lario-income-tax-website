@@ -99,3 +99,6 @@ swa-cli.config.json
 
 # Old Docker files (migrated to Static Web Apps)
 *.old
+
+# Graphify knowledge graph output
+/graphify-out/

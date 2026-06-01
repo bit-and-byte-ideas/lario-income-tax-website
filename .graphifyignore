@@ -1,0 +1,41 @@
+# Third-party and generated code — not part of the project's knowledge graph
+node_modules/
+dist/
+site/
+coverage/
+
+# Build caches
+.angular/
+*.tsbuildinfo
+
+# Graphify's own output (avoids self-referential scanning on --update)
+graphify-out/
+
+# Dependency lockfile (large, no semantic value for graph edges)
+package-lock.json
+yarn.lock
+
+# Terraform state and provider cache (sensitive + auto-generated)
+**/.terraform/
+**/terraform.tfstate
+**/terraform.tfstate.backup
+**/.terraform.lock.hcl
+
+# Python virtual environments
+.venv/
+__pycache__/
+
+# XLIFF translation files (XML serialization of extracted strings — structure
+# is already captured in the TypeScript source files that use $localize)
+src/locale/
+
+# Binary and media assets (no textual knowledge to extract)
+src/assets/
+public/assets/
+
+# TechDocs MkDocs build output
+site/
+
+# VS Code and system metadata
+.DS_Store
+Thumbs.db

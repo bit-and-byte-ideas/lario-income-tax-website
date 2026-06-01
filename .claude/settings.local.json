@@ -42,7 +42,9 @@
       "Bash(npm run build:es:*)",
       "Bash(npm run build:i18n:*)",
       "Bash(npm run extract-i18n:*)",
-      "WebFetch(domain:green-bush-0c265bf0f.4.azurestaticapps.net)"
+      "WebFetch(domain:green-bush-0c265bf0f.4.azurestaticapps.net)",
+      "Bash(graphify export *)",
+      "Bash(graphify benchmark *)"
     ]
   }
 }
