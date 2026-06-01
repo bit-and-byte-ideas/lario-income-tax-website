@@ -19,22 +19,31 @@ git clone <repository-url>
 cd larios-income-tax-website
 npm install
 
-# Start development server
+# Start development server (English)
 npm start
+# or explicitly: npm run start:en
 # Navigate to http://localhost:4200
+
+# To test Spanish locale
+npm run start:es
+# Navigate to http://localhost:4200/es/
 ```
 
 ### Common Commands
 
-```bash
-npm start              # Start development server
-npm run build          # Build for production
-npm test               # Run unit tests
-npm run format         # Format code with Prettier
-npm run lint:md        # Lint markdown files
-```
+| Command                           | Purpose                         |
+| --------------------------------- | ------------------------------- |
+| `npm start` or `npm run start:en` | Development server (English)    |
+| `npm run start:es`                | Development server (Spanish)    |
+| `npm run build:i18n`              | Production build (both locales) |
+| `npm run build:en`                | Production build (English only) |
+| `npm run build:es`                | Production build (Spanish only) |
+| `npm test`                        | Run unit tests                  |
+| `npm run extract-i18n`            | Extract translatable strings    |
+| `npm run format`                  | Format code with Prettier       |
+| `npm run lint:md:fix`             | Fix markdown linting issues     |
 
-For Angular CLI commands (generate components, services, etc.), see [Setup Guide](docs/setup-guide.md).
+For detailed development workflow, see [Local Development](docs/getting-started/development.md).
 
 ## Azure Deployment
 
@@ -60,17 +69,29 @@ See [Infrastructure Setup Guide](deploy/SETUP.md) for complete instructions.
 
 ## Documentation
 
-Comprehensive technical documentation is available using [Backstage TechDocs](https://backstage.io/docs/features/techdocs/):
+Comprehensive technical documentation is available in the `/docs` directory:
 
-- [Features](docs/features.md) - Detailed feature documentation
-- [Setup Guide](docs/setup-guide.md) - Installation and development workflow
-- [Architecture](docs/architecture.md) - Project structure and design patterns
-- [Theme System](docs/THEMES.md) - Color scheme toggle and customization
-- [Code Quality](docs/code-quality.md) - Standards, linting, and pre-commit hooks
-- [CI/CD Pipeline](docs/ci-cd.md) - GitHub Actions workflows
-- [Production Build](docs/production-build.md) - Building for production
-- [Azure Deployment](docs/azure-deployment-setup.md) - Azure Static Web Apps deployment guide
-- [Environment Config](docs/environment-config.md) - Configuration guide
+### Getting Started
+
+- [Installation](docs/getting-started/installation.md) - Setup and prerequisites
+- [Local Development](docs/getting-started/development.md) - Development server and workflow
+- [Environment Configuration](docs/getting-started/environment.md) - Configuration guide
+
+### Architecture & Features
+
+- [Project Structure](docs/architecture/project-structure.md) - Directory organization
+- [Internationalization (i18n)](docs/architecture/i18n.md) - Bilingual English/Spanish setup
+- [Features](docs/features/index.md) - Detailed feature documentation
+- [Services Catalog](docs/features/services.md) - Service listing and management
+- [Theme System](docs/features/themes.md) - Color scheme customization
+
+### Guides & Deployment
+
+- [Adding a New Service](docs/guides/adding-services.md) - Service catalog workflow
+- [Adding Translations](docs/guides/adding-translations.md) - i18n workflow
+- [Production Build](docs/guides/production-build.md) - Building for production
+- [Code Quality](docs/guides/code-quality.md) - Standards and linting
+- [Azure Deployment](docs/guides/azure-deployment.md) - Deployment setup
 
 **View locally:**
 
@@ -138,8 +159,21 @@ See [Code Quality](docs/code-quality.md) and [CI/CD Pipeline](docs/ci-cd.md) for
 This project uses automated code quality tools:
 
 - Pre-commit hooks (Prettier, markdownlint)
-- See [Code Quality Guide](docs/code-quality.md)
+- Unit tests with Vitest
+- See [Code Quality Guide](docs/guides/code-quality.md)
 - AI development guidelines: [CLAUDE.md](CLAUDE.md)
+
+### Using Claude Code
+
+Custom skills for common workflows:
+
+```bash
+/add-business-service    # Add a new service to the catalog
+/add-translation         # Add translatable strings
+/check-missing-translations  # Audit translation coverage
+```
+
+See [CLAUDE.md](CLAUDE.md) for detailed skill instructions.
 
 ## License
 

@@ -7,25 +7,31 @@ edit_uri: edit/main/docs/
 nav:
   - Home: index.md
   - Getting Started:
-      - Setup Guide: setup-guide.md
-      - Environment Configuration: environment-config.md
-  - Development:
-      - Features: features.md
-      - Architecture: architecture.md
-      - Project Structure: project-structure.md
-      - Code Quality: code-quality.md
-      - Production Build: production-build.md
-  - Azure Deployment:
-      - Infrastructure Overview: azure-infrastructure.md
-      - Deployment Setup: azure-deployment-setup.md
-      - Deployment Checklist: azure-deployment-checklist.md
-  - CI/CD:
-      - CI/CD Pipeline: ci-cd.md
+      - Installation: getting-started/installation.md
+      - Local Development: getting-started/development.md
+      - Environment Configuration: getting-started/environment.md
+  - Architecture:
+      - Project Structure: architecture/project-structure.md
+      - Internationalization (i18n): architecture/i18n.md
+      - Module Structure: architecture/module-structure.md
+  - Features:
+      - Overview: features/index.md
+      - Services Catalog: features/services.md
+      - Theme System: features/themes.md
+  - Guides:
+      - Adding a Service: guides/adding-services.md
+      - Adding Translations: guides/adding-translations.md
+      - Production Build: guides/production-build.md
+      - Code Quality: guides/code-quality.md
+      - Pre-commit Setup: guides/pre-commit.md
+      - CI/CD Pipeline: guides/ci-cd.md
+      - Azure Deployment: guides/azure-deployment.md
+      - Azure Infrastructure: guides/azure-infrastructure.md
+      - Deployment Checklist: guides/azure-checklist.md
   - Project Information:
       - About This Project: project-info.md
   - Style Guides:
       - Markdown Style Guide: markdown-style-guide.md
-      - Pre-commit Setup: pre-commit-setup.md
 
 theme:
   name: material
