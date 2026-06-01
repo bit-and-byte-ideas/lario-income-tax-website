@@ -3,7 +3,7 @@
 ## Overview
 
 This document describes the complete infrastructure architecture for deploying the Larios Income Tax website to Azure
-Static Web Apps using Terraform and GitHub Actions.
+Static Web Apps using OpenTofu and GitHub Actions.
 
 ## Architecture Diagram
 
@@ -20,13 +20,13 @@ infrastructure diagram that can be imported into Draw.IO.
 │         │                                     │                 │
 │         v                                     v                 │
 │  ┌──────────────────────┐          ┌──────────────────────┐   │
-│  │   deploy-dev.yml     │          │   deploy-prod.yml    │   │
+│  │ deploy-infra-dev.yaml│          │deploy-infra-prod.yaml│   │
 │  └──────────────────────┘          └──────────────────────┘   │
 └─────────────────────────────────────────────────────────────────┘
          │                                     │
          v                                     v
 ┌─────────────────────────────────────────────────────────────────┐
-│                         Terraform                                │
+│                         OpenTofu                                 │
 ├─────────────────────────────────────────────────────────────────┤
 │  Validate → Plan → Apply (with approval)                        │
 │  Creates: Resource Groups, Static Web Apps, App Insights        │
@@ -87,12 +87,12 @@ See [ci-cd.md](ci-cd.md) for detailed CI/CD pipeline documentation and the visua
    - Build Angular application
    - Upload build artifact
 
-1. **Terraform Validate**:
+1. **OpenTofu Validate**:
    - Format check
    - Initialize (no backend)
    - Validate configuration
 
-1. **Deploy Infrastructure** (Terraform):
+1. **Deploy Infrastructure** (OpenTofu):
    - Initialize with Azure backend
    - Plan infrastructure changes
    - Apply changes (creates/updates Static Web App, App Insights)
@@ -106,36 +106,35 @@ See [ci-cd.md](ci-cd.md) for detailed CI/CD pipeline documentation and the visua
 
 ### Infrastructure as Code
 
-#### Terraform Structure
+#### OpenTofu Structure
 
 ```text
 deploy/
-├── modules/
-│   └── static-web-app/      # Reusable module
-│       ├── main.tf          # Resource definitions
-│       ├── variables.tf     # Input variables
-│       ├── outputs.tf       # Output values
-│       └── README.md        # Module documentation
-├── environments/
-│   ├── dev/                 # Development environment
-│   │   ├── main.tf         # Environment configuration
-│   │   ├── variables.tf    # Environment variables
-│   │   ├── backend.tf      # State configuration
-│   │   └── outputs.tf      # Environment outputs
-│   └── prod/                # Production environment
-│       └── (same structure)
-├── MIGRATION.md
-└── README.md
+└── infra/
+    ├── dev/                 # Development environment
+    │   ├── main.tf          # Module call
+    │   ├── variables.tf     # Input variables
+    │   ├── backend.tf       # Remote state config
+    │   ├── outputs.tf       # site_url, api_key
+    │   ├── terraform.tfvars # Environment values (committed)
+    │   └── .terraform.lock.hcl  # Provider lock file (committed)
+    └── prod/                # Production environment
+        └── (same structure)
 ```
+
+The reusable module is consumed from
+[azure-static-webapp-cicd-kit](https://github.com/bit-and-byte-ideas/azure-static-webapp-cicd-kit)
+via a GitHub source reference — no local `modules/` directory required.
 
 #### State Management
 
-- **Backend**: Azure Storage Account
+- **Backend**: Azure Storage Account (azurerm backend)
 - **State Files**:
   - Dev: `larios-income-tax-dev.tfstate`
   - Prod: `larios-income-tax-prod.tfstate`
 - **State Locking**: Blob lease mechanism (automatic)
 - **Encryption**: Server-side encryption (automatic)
+- **Backend credentials**: passed via GitHub Actions workflow (OIDC — no static secrets)
 
 ### Azure Resources
 
@@ -159,7 +158,7 @@ deploy/
 - Global CDN distribution
 - Native Angular SPA support
 - CI/CD integration via GitHub Actions
-- Deployment tokens managed by Terraform
+- Deployment tokens managed by OpenTofu
 - SPA routing with staticwebapp.config.json
 
 **Application Insights**:
@@ -194,7 +193,7 @@ deploy/
 - Custom domains with SSL
 - SLA-backed uptime guarantee (99.95%)
 - Native Angular SPA support
-- Deployment tokens managed by Terraform
+- Deployment tokens managed by OpenTofu
 - SPA routing with staticwebapp.config.json
 
 **Application Insights**:
@@ -230,11 +229,11 @@ deploy/
 
 #### Authentication & Authorization
 
-**Service Principal**:
+**Service Principal (OIDC)**:
 
 - Role: Contributor (scoped to subscription)
-- Used by: GitHub Actions and Terraform
-- Permissions: Create/modify Azure resources
+- Used by: GitHub Actions and OpenTofu via OIDC federated credentials
+- No client secrets — GitHub Actions exchanges its OIDC token for short-lived Azure credentials
 
 **Managed Identity**:
 
@@ -244,17 +243,22 @@ deploy/
 
 #### Secrets Management
 
-**GitHub Secrets** (encrypted at rest):
+Workflows authenticate to Azure via OIDC — no client secrets are stored anywhere.
+Non-sensitive IDs are stored as **repository variables** (`vars.*`); only the deployment token is a secret.
 
-- `AZURE_CLIENT_ID`: Service Principal client ID
-- `AZURE_CLIENT_SECRET`: Service Principal client secret
-- `AZURE_SUBSCRIPTION_ID`: Azure subscription ID
-- `AZURE_TENANT_ID`: Azure tenant ID
-- `TF_BACKEND_RESOURCE_GROUP`: Terraform state resource group
-- `TF_BACKEND_STORAGE_ACCOUNT`: Terraform state storage account
-- `TF_BACKEND_CONTAINER`: Terraform state container
-- `AZURE_STATIC_WEB_APPS_API_TOKEN_DEV`: Dev deployment token
-- `AZURE_STATIC_WEB_APPS_API_TOKEN_PROD`: Prod deployment token
+**Repository Variables** (Settings → Secrets and variables → Actions → Variables):
+
+- `AZURE_CLIENT_ID_DEV` / `AZURE_CLIENT_ID_PROD` — service principal app IDs
+- `AZURE_TENANT_ID` — Azure AD tenant ID
+- `AZURE_SUBSCRIPTION_ID_DEV` / `AZURE_SUBSCRIPTION_ID_PROD` — subscription IDs
+- `TF_BACKEND_RESOURCE_GROUP` — state storage resource group
+- `TF_BACKEND_STORAGE_ACCOUNT` — state storage account name
+- `TF_BACKEND_CONTAINER_DEV` / `TF_BACKEND_CONTAINER_PROD` — state blob containers
+- `TF_BACKEND_KEY_DEV` / `TF_BACKEND_KEY_PROD` — state file keys
+
+**Environment Secrets** (Settings → Environments → `dev` / `prod` → Secrets):
+
+- `AZURE_STATIC_WEB_APPS_API_TOKEN` — SWA deployment token (obtained from `tofu output -raw api_key`)
 
 **Static Web App Configuration** (via staticwebapp.config.json):
 
@@ -367,7 +371,7 @@ deploy/
 
 **Configuration**:
 
-- Infrastructure as Code (Terraform)
+- Infrastructure as Code (OpenTofu)
 - Version controlled in Git
 - Can recreate from scratch
 - staticwebapp.config.json in source control
@@ -383,7 +387,7 @@ deploy/
 **Infrastructure Loss**:
 
 1. Verify Terraform state intact
-1. Run `terraform apply`
+1. Run `tofu apply`
 1. Resources recreated automatically
 1. Redeploy application
 
@@ -489,17 +493,6 @@ deploy/
 
 **Overall Savings**: 90% (~$77/month or ~$924/year)
 
-### Migration from App Services
-
-See `deploy/MIGRATION.md` in the repository root for complete migration documentation including:
-
-- Why we migrated (cost, performance, features)
-- What changed (infrastructure, deployment, files)
-- Terraform changes comparison
-- GitHub Actions workflow changes
-- Deployment token management
-- Migration steps and rollback plan
-
 ### Future Enhancements
 
 #### Immediate Capabilities (Already Supported)
@@ -535,6 +528,8 @@ See `deploy/MIGRATION.md` in the repository root for complete migration document
 - [Azure Deployment Setup Guide](azure-deployment.md): Complete setup instructions
 - [Azure Deployment Checklist](azure-checklist.md): Pre and post-deployment checklists
 - [CI/CD Pipeline](ci-cd.md): Pipeline documentation
-- Migration Guide: See `deploy/MIGRATION.md` in repository root for App Services to Static Web Apps migration
-- Terraform Code: See `deploy/` directory in repository root for infrastructure code
+- OpenTofu Code: See `deploy/infra/` directory in repository root for infrastructure code
+- [azure-static-webapp-cicd-kit](https://github.com/bit-and-byte-ideas/azure-static-webapp-cicd-kit):
+  Reusable module and workflows
+- [OpenTofu Documentation](https://opentofu.org/docs/)
 - [Azure Static Web Apps Docs](https://docs.microsoft.com/azure/static-web-apps/)
