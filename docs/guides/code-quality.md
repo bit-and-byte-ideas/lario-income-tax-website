@@ -67,7 +67,7 @@ npm run lint:md:fix      # Fix markdown issues
 - MD022: Missing blank lines around headings
 - MD032: Missing blank lines around lists
 
-See [Markdown Style Guide](markdown-style-guide.md) for details.
+See [Markdown Style Guide](../markdown-style-guide.md) for details.
 
 ### TypeScript
 
