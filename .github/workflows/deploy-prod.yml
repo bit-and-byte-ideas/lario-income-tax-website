@@ -61,7 +61,7 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: 1.6.0
+          terraform_version: 1.15.5
 
       - name: Terraform Format Check
         working-directory: ./deploy/environments/prod
@@ -88,7 +88,7 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: 1.6.0
+          terraform_version: 1.15.5
           terraform_wrapper: false
 
       - name: Azure Login
@@ -178,7 +178,7 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: 1.6.0
+          terraform_version: 1.15.5
           terraform_wrapper: false
 
       - name: Azure Login
