@@ -11,20 +11,30 @@ Use this checklist to ensure all prerequisites are met before deploying to Azure
 - [ ] Logged into Azure (`az login`)
 - [ ] Correct subscription selected (`az account show`)
 
-### Service Principal
+### Service Principals
 
-- [ ] Service principal created with Contributor role
-- [ ] Client ID saved
-- [ ] Client secret saved
-- [ ] Subscription ID saved
-- [ ] Tenant ID saved
+- [ ] Dev service principal created (no client secret)
+- [ ] Dev service principal Client ID saved
+- [ ] Dev Subscription ID saved
+- [ ] Prod service principal created (no client secret)
+- [ ] Prod service principal Client ID saved
+- [ ] Prod Subscription ID saved
+- [ ] Azure AD Tenant ID saved
+- [ ] Contributor role assigned to dev SP on dev subscription
+- [ ] Contributor role assigned to prod SP on prod subscription
 
-### Terraform State Backend
+### OIDC Federated Credentials
 
-- [ ] Resource group created for Terraform state
-- [ ] Storage account created
-- [ ] Storage account name is unique
-- [ ] Blob container created named "tfstate"
+- [ ] Dev SP: federated credential for `ref:refs/heads/main` (push trigger)
+- [ ] Dev SP: federated credential for `pull_request` (PR trigger)
+- [ ] Prod SP: federated credential for `ref:refs/heads/main` (push trigger)
+
+### OpenTofu State Backend
+
+- [ ] Resource group created for OpenTofu state
+- [ ] Storage account created (globally unique name)
+- [ ] Blob container `tfstate-dev` created
+- [ ] Blob container `tfstate-prod` created
 - [ ] Storage account name saved
 - [ ] Resource group name saved
 
@@ -35,96 +45,91 @@ Use this checklist to ensure all prerequisites are met before deploying to Azure
 - [ ] Node.js and npm available
 - [ ] Angular build working locally
 
-### GitHub Secrets Configuration
+### GitHub Repository Variables
 
-Azure Credentials:
+Azure Identity (Settings → Secrets and variables → Actions → **Variables** tab):
 
-- [ ] `AZURE_CLIENT_ID` configured
-- [ ] `AZURE_CLIENT_SECRET` configured
-- [ ] `AZURE_SUBSCRIPTION_ID` configured
+- [ ] `AZURE_CLIENT_ID_DEV` configured
+- [ ] `AZURE_CLIENT_ID_PROD` configured
 - [ ] `AZURE_TENANT_ID` configured
+- [ ] `AZURE_SUBSCRIPTION_ID_DEV` configured
+- [ ] `AZURE_SUBSCRIPTION_ID_PROD` configured
 
-Terraform Backend:
+OpenTofu Backend:
 
 - [ ] `TF_BACKEND_RESOURCE_GROUP` configured
 - [ ] `TF_BACKEND_STORAGE_ACCOUNT` configured
-- [ ] `TF_BACKEND_CONTAINER` configured
-
-Static Web Apps Deployment Tokens (added after first Terraform deployment):
-
-- [ ] `AZURE_STATIC_WEB_APPS_API_TOKEN_DEV` configured
-- [ ] `AZURE_STATIC_WEB_APPS_API_TOKEN_PROD` configured
+- [ ] `TF_BACKEND_CONTAINER_DEV` configured
+- [ ] `TF_BACKEND_CONTAINER_PROD` configured
+- [ ] `TF_BACKEND_KEY_DEV` configured
+- [ ] `TF_BACKEND_KEY_PROD` configured
 
 ### GitHub Environments
 
 Development:
 
-- [ ] Environment named "dev" created
+- [ ] Environment named `dev` created
 - [ ] Required reviewers configured
-- [ ] Deployment branch set to "main" (optional)
+- [ ] Deployment branch set to `main` (optional)
 
 Production:
 
-- [ ] Environment named "prod" created
+- [ ] Environment named `prod` created
 - [ ] Required reviewers configured (recommend 2+)
-- [ ] Deployment branch set to tags (optional)
+- [ ] Deployment branch set to `main` (optional)
 
 ### Local Development (Optional)
 
-- [ ] Terraform installed (`terraform version`)
-- [ ] Terraform version 1.6.0 or higher
+- [ ] OpenTofu installed (`tofu version`)
+- [ ] OpenTofu version 1.6.0 or higher
 - [ ] Node.js 20+ installed
 - [ ] Git configured properly
 - [ ] Angular CLI available
 
 ## First Deployment Checklist
 
-### Initial Infrastructure Deployment
+### Dev Infrastructure Deployment
 
-**Note**: The first deployment requires a two-step process to obtain deployment tokens.
-
-Step 1 - Infrastructure Only:
-
-- [ ] `deploy-app` job commented out in `.github/workflows/deploy-dev.yml`
-- [ ] Code pushed to main branch
-- [ ] Build and validate workflow completed
-- [ ] Terraform validation passed
-- [ ] Deployment approval requested
-- [ ] Deployment approved
-- [ ] Terraform apply completed successfully
+- [ ] Push code to `main` branch
+- [ ] `deploy-infra-dev.yaml` workflow triggered
+- [ ] OpenTofu validate job passed
+- [ ] OpenTofu plan job passed
+- [ ] `apply` job approved in `dev` environment
+- [ ] `tofu apply` completed successfully
 - [ ] Static Web App resource created in Azure
 
-Step 2 - Get Deployment Tokens:
+### Add Dev Deployment Token
 
-- [ ] Connected to Azure via `az login`
-- [ ] Navigated to `deploy/environments/dev`
-- [ ] Terraform initialized with backend
-- [ ] Deployment token retrieved via `terraform output -raw static_web_app_api_key`
-- [ ] Token added to GitHub Secrets as `AZURE_STATIC_WEB_APPS_API_TOKEN_DEV`
+- [ ] Token retrieved via `cd deploy/infra/dev && tofu output -raw api_key`
+- [ ] Token added to Settings → Environments → `dev` → Secrets as `AZURE_STATIC_WEB_APPS_API_TOKEN`
 
-Step 3 - Complete Deployment:
+### Dev App Deployment
 
-- [ ] `deploy-app` job uncommented in workflow
-- [ ] Changes pushed to main
-- [ ] Full deployment workflow completed
-- [ ] Application deployed to Static Web App
+- [ ] `deploy-app-dev.yaml` triggered on next push to main
+- [ ] Application deployed to dev Static Web App
 - [ ] Development URL accessible
-- [ ] Application loads correctly
+- [ ] Application loads correctly (English and Spanish locales)
 
-### Production Deployment
+### Prod Infrastructure Deployment
+
+- [ ] `deploy-infra-prod.yaml` triggered on push to main
+- [ ] `apply` job approved in `prod` environment
+- [ ] `tofu apply` completed successfully
+- [ ] Prod Static Web App resource created in Azure
+
+### Add Prod Deployment Token
+
+- [ ] Token retrieved via `cd deploy/infra/prod && tofu output -raw api_key`
+- [ ] Token added to Settings → Environments → `prod` → Secrets as `AZURE_STATIC_WEB_APPS_API_TOKEN`
+
+### First Production Release
 
 - [ ] Development environment tested and working
-- [ ] Production infrastructure deployed via Terraform
-- [ ] Production deployment token retrieved
-- [ ] Token added to GitHub Secrets as `AZURE_STATIC_WEB_APPS_API_TOKEN_PROD`
 - [ ] Release version decided (e.g., v1.0.0)
 - [ ] Git tag created and pushed
 - [ ] GitHub release created
 - [ ] Angular build completed successfully
-- [ ] Terraform validation passed
-- [ ] Deployment approval requested
-- [ ] Deployment approved by required reviewers
-- [ ] Terraform apply completed successfully
+- [ ] `apply` job approved by required reviewers in `prod` environment
 - [ ] Application deployment completed
 - [ ] Production URL accessible
 - [ ] Application loads correctly
@@ -137,7 +142,6 @@ Step 3 - Complete Deployment:
 
 - [ ] Application loads on Static Web App URL
 - [ ] SPA routing working (navigate to different routes)
-- [ ] Application Insights showing data
 - [ ] Deployment history visible in Azure Portal
 - [ ] No errors in Application Insights
 - [ ] Performance metrics acceptable
@@ -163,7 +167,6 @@ Step 3 - Complete Deployment:
 
 - [ ] Deployment notes documented
 - [ ] Static Web App URL documented
-- [ ] Deployment token location documented
 - [ ] Custom domain configuration documented (if applicable)
 - [ ] Known issues documented
 - [ ] Runbook updated
@@ -173,9 +176,10 @@ Step 3 - Complete Deployment:
 - [ ] HTTPS enforced (automatic)
 - [ ] SSL certificate provisioned (automatic)
 - [ ] Security headers configured in staticwebapp.config.json
-- [ ] Deployment tokens stored securely in GitHub Secrets
+- [ ] OIDC federated credentials verified in Azure Portal
+- [ ] No client secrets stored anywhere
+- [ ] `AZURE_STATIC_WEB_APPS_API_TOKEN` confirmed as environment secret (not repository secret)
 - [ ] Access reviews completed
-- [ ] Audit logs reviewed
 
 ## Ongoing Maintenance Checklist
 
@@ -189,16 +193,15 @@ Step 3 - Complete Deployment:
 
 ### Quarterly
 
-- [ ] Rotate service principal credentials
 - [ ] Review and update monitoring alerts
 - [ ] Performance optimization review
-- [ ] Security audit
-- [ ] Review deployment token security
+- [ ] Security audit — review service principal RBAC permissions
+- [ ] Review OIDC federated credential subjects (update if repo or org name changes)
 
 ### As Needed
 
 - [ ] Test disaster recovery procedures
-- [ ] Update Terraform to latest version
+- [ ] Update OpenTofu to latest version
 - [ ] Review Angular version and update if needed
 - [ ] Review staticwebapp.config.json for optimizations
 
@@ -207,11 +210,12 @@ Step 3 - Complete Deployment:
 ### Deployment Fails
 
 - [ ] Check GitHub Actions logs
-- [ ] Verify all secrets are configured (9 total)
+- [ ] Verify all 11 repository variables are configured
+- [ ] Verify OIDC federated credentials are correct on the service principal
 - [ ] Check Azure service health
-- [ ] Verify service principal permissions
-- [ ] Check Terraform state is not locked
-- [ ] Verify deployment token is correct and not expired
+- [ ] Verify service principal has Contributor permissions
+- [ ] Check OpenTofu state is not locked
+- [ ] Verify `AZURE_STATIC_WEB_APPS_API_TOKEN` environment secret is set
 
 ### Build Fails
 
@@ -271,33 +275,30 @@ Step 3 - Complete Deployment:
 1. [ ] Check GitHub Actions logs for error details
 2. [ ] Verify deployment token is valid
 3. [ ] Check Azure Static Web App status
-4. [ ] Review Terraform state
+4. [ ] Review OpenTofu state
 5. [ ] Retry deployment if transient error
 6. [ ] Rollback to previous release if needed
 7. [ ] Document issue and resolution
 
 ### Security Incident
 
-1. [ ] Rotate all credentials immediately:
-   - [ ] Service principal credentials
-   - [ ] Deployment tokens
-   - [ ] GitHub secrets
-2. [ ] Review access logs in Azure
-3. [ ] Check for unauthorized changes
-4. [ ] Review GitHub audit log
-5. [ ] Notify security team
-6. [ ] Document incident
-7. [ ] Update security procedures
+1. [ ] Rotate deployment tokens immediately:
+   - [ ] Run `tofu apply` to regenerate `AZURE_STATIC_WEB_APPS_API_TOKEN`
+   - [ ] Update environment secrets in GitHub
+2. [ ] Review OIDC federated credentials in Azure Portal
+3. [ ] Review access logs in Azure
+4. [ ] Check for unauthorized changes
+5. [ ] Review GitHub audit log
+6. [ ] Notify security team
+7. [ ] Document incident
 
 ### State File Corruption
 
-1. [ ] Check Terraform state backups in Azure Storage
-2. [ ] Review blob versioning
-3. [ ] Assess impact on infrastructure
-4. [ ] Restore from previous state version if needed
-5. [ ] Run `terraform refresh` to reconcile
-6. [ ] Document incident
-7. [ ] Review state backup procedures
+1. [ ] Check OpenTofu state backups in Azure Storage (blob versioning)
+2. [ ] Assess impact on infrastructure
+3. [ ] Restore from previous state version if needed
+4. [ ] Run `tofu refresh` to reconcile
+5. [ ] Document incident and review backup procedures
 
 ## Cost Monitoring Checklist
 
@@ -308,7 +309,6 @@ Step 3 - Complete Deployment:
 - [ ] Total should be ~$9/month
 - [ ] Check bandwidth usage (100 GB included, $0.15/GB overage)
 - [ ] Review unexpected charges
-- [ ] Verify cost savings vs. previous architecture (90% reduction)
 
 ### Cost Optimization
 
@@ -316,28 +316,11 @@ Step 3 - Complete Deployment:
 - [ ] Monitor production bandwidth usage
 - [ ] Review Application Insights retention (90 days)
 - [ ] Check for unused resources
-- [ ] Consider downgrade to Free tier for non-critical prod if traffic is low
-
-## Migration Checklist (From App Services)
-
-If migrating from Docker-based App Services:
-
-- [ ] Review migration documentation (`deploy/MIGRATION.md` in repository root)
-- [ ] Backup current App Service configuration
-- [ ] Archive old Docker files (.old extension)
-- [ ] Update GitHub workflows
-- [ ] Test Static Web Apps deployment in dev first
-- [ ] Verify all functionality works
-- [ ] Update DNS if using custom domain
-- [ ] Verify SSL certificates migrate correctly
-- [ ] Decommission old App Services resources
-- [ ] Update documentation references
 
 ## Notes
 
 - Keep this checklist updated as your deployment evolves
 - Document any deviations or custom configurations
-- Share learnings with the team
-- Regular reviews improve reliability
-- Static Web Apps deployment is simpler than App Services - no Docker management required
-- Deployment tokens should be treated as sensitive credentials
+- Static Web Apps deployment is simpler than App Services — no Docker management required
+- Deployment tokens should be treated as sensitive credentials (environment secrets, not repo secrets)
+- OIDC means no credential rotation is needed for service principal access

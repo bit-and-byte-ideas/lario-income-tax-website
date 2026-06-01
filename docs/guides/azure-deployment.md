@@ -1,51 +1,101 @@
 # Azure Deployment Setup Guide
 
-This guide walks you through setting up the complete Azure infrastructure and CI/CD pipeline for the Larios Income
-Tax website using Azure Static Web Apps.
+This guide walks you through setting up the complete Azure infrastructure and CI/CD pipeline for the
+Larios Income Tax website using Azure Static Web Apps, OpenTofu, and OIDC authentication.
 
 ## Prerequisites
 
 - Azure subscription
 - Azure CLI installed locally
 - GitHub repository with admin access
-- Terraform 1.6+ installed locally (optional for local testing)
+- OpenTofu 1.6+ installed locally (optional — for local testing only)
 
-## Step 1: Azure Service Principal
+## Step 1: Create Service Principals
 
-Create a service principal for Terraform and GitHub Actions:
+Create separate service principals for dev and prod. No client secrets are used — GitHub Actions
+authenticates via OIDC federated credentials.
 
 ```bash
 # Login to Azure
 az login
 
-# Set your subscription
-az account set --subscription "YOUR_SUBSCRIPTION_ID"
+# Set your dev subscription
+az account set --subscription "YOUR_SUBSCRIPTION_ID_DEV"
 
-# Create service principal with Contributor role
+# Create dev service principal (no client secret)
 az ad sp create-for-rbac \
-  --name "larios-income-tax-terraform" \
-  --role contributor \
-  --scopes /subscriptions/YOUR_SUBSCRIPTION_ID \
-  --sdk-auth
+  --name "larios-income-tax-dev" \
+  --skip-assignment
+
+# Note the appId — this is AZURE_CLIENT_ID_DEV
+
+# Assign Contributor role scoped to the dev subscription
+az role assignment create \
+  --assignee <DEV_APP_ID> \
+  --role Contributor \
+  --scope /subscriptions/YOUR_SUBSCRIPTION_ID_DEV
+
+# Repeat for prod
+az ad sp create-for-rbac \
+  --name "larios-income-tax-prod" \
+  --skip-assignment
+
+az role assignment create \
+  --assignee <PROD_APP_ID> \
+  --role Contributor \
+  --scope /subscriptions/YOUR_SUBSCRIPTION_ID_PROD
 ```
 
-Save the JSON output - you'll need it for GitHub secrets.
+## Step 2: Configure OIDC Federated Credentials
 
-## Step 2: Terraform State Storage
-
-Create Azure Storage for Terraform state:
+For each service principal, add federated credentials so GitHub Actions can authenticate without
+a client secret. Replace `bit-and-byte-ideas/larios-income-tax-website` with your org/repo.
 
 ```bash
-# Variables
+# Dev SP: allow main branch pushes
+az ad app federated-credential create \
+  --id <AZURE_CLIENT_ID_DEV> \
+  --parameters '{
+    "name": "github-main",
+    "issuer": "https://token.actions.githubusercontent.com",
+    "subject": "repo:bit-and-byte-ideas/larios-income-tax-website:ref:refs/heads/main",
+    "audiences": ["api://AzureADTokenExchange"]
+  }'
+
+# Dev SP: allow pull requests
+az ad app federated-credential create \
+  --id <AZURE_CLIENT_ID_DEV> \
+  --parameters '{
+    "name": "github-prs",
+    "issuer": "https://token.actions.githubusercontent.com",
+    "subject": "repo:bit-and-byte-ideas/larios-income-tax-website:pull_request",
+    "audiences": ["api://AzureADTokenExchange"]
+  }'
+
+# Prod SP: allow main branch pushes
+az ad app federated-credential create \
+  --id <AZURE_CLIENT_ID_PROD> \
+  --parameters '{
+    "name": "github-main",
+    "issuer": "https://token.actions.githubusercontent.com",
+    "subject": "repo:bit-and-byte-ideas/larios-income-tax-website:ref:refs/heads/main",
+    "audiences": ["api://AzureADTokenExchange"]
+  }'
+```
+
+## Step 3: OpenTofu State Storage
+
+Create Azure Storage for OpenTofu remote state:
+
+```bash
 RESOURCE_GROUP="rg-terraform-state"
-STORAGE_ACCOUNT="sttfstate$(date +%s)"  # Creates unique name
-CONTAINER="tfstate"
+STORAGE_ACCOUNT="stlariostfstate"   # must be globally unique, lowercase, 3-24 chars
+CONTAINER_DEV="tfstate-dev"
+CONTAINER_PROD="tfstate-prod"
 LOCATION="eastus"
 
-# Create resource group
 az group create --name $RESOURCE_GROUP --location $LOCATION
 
-# Create storage account
 az storage account create \
   --name $STORAGE_ACCOUNT \
   --resource-group $RESOURCE_GROUP \
@@ -53,224 +103,145 @@ az storage account create \
   --sku Standard_LRS \
   --encryption-services blob
 
-# Get storage account key
 ACCOUNT_KEY=$(az storage account keys list \
   --resource-group $RESOURCE_GROUP \
   --account-name $STORAGE_ACCOUNT \
   --query '[0].value' -o tsv)
 
-# Create blob container
 az storage container create \
-  --name $CONTAINER \
+  --name $CONTAINER_DEV \
+  --account-name $STORAGE_ACCOUNT \
+  --account-key $ACCOUNT_KEY
+
+az storage container create \
+  --name $CONTAINER_PROD \
   --account-name $STORAGE_ACCOUNT \
   --account-key $ACCOUNT_KEY
 
 echo "Storage Account: $STORAGE_ACCOUNT"
-echo "Resource Group: $RESOURCE_GROUP"
-echo "Container: $CONTAINER"
+echo "Resource Group:  $RESOURCE_GROUP"
 ```
 
-Save these values for GitHub secrets.
+## Step 4: GitHub Repository Variables
 
-## Step 3: GitHub Secrets
+Configure the following as **repository variables** (Settings → Secrets and variables → Actions →
+**Variables** tab). These are non-sensitive IDs — store them as variables, not secrets.
 
-Configure the following secrets in your GitHub repository (Settings → Secrets and variables → Actions):
+### Azure Identity
 
-### Azure Credentials
+| Variable                     | Value                          |
+| ---------------------------- | ------------------------------ |
+| `AZURE_CLIENT_ID_DEV`        | Dev service principal `appId`  |
+| `AZURE_CLIENT_ID_PROD`       | Prod service principal `appId` |
+| `AZURE_TENANT_ID`            | Azure AD tenant ID             |
+| `AZURE_SUBSCRIPTION_ID_DEV`  | Dev subscription ID            |
+| `AZURE_SUBSCRIPTION_ID_PROD` | Prod subscription ID           |
 
-From the service principal JSON output:
+### OpenTofu Backend
 
-- `AZURE_CLIENT_ID`: Value of `clientId`
-- `AZURE_CLIENT_SECRET`: Value of `clientSecret`
-- `AZURE_SUBSCRIPTION_ID`: Value of `subscriptionId`
-- `AZURE_TENANT_ID`: Value of `tenantId`
+| Variable                     | Value                                 |
+| ---------------------------- | ------------------------------------- |
+| `TF_BACKEND_RESOURCE_GROUP`  | e.g. `rg-terraform-state`             |
+| `TF_BACKEND_STORAGE_ACCOUNT` | Storage account name from Step 3      |
+| `TF_BACKEND_CONTAINER_DEV`   | e.g. `tfstate-dev`                    |
+| `TF_BACKEND_CONTAINER_PROD`  | e.g. `tfstate-prod`                   |
+| `TF_BACKEND_KEY_DEV`         | e.g. `larios-income-tax-dev.tfstate`  |
+| `TF_BACKEND_KEY_PROD`        | e.g. `larios-income-tax-prod.tfstate` |
 
-### Terraform Backend
+## Step 5: GitHub Environments
 
-From Step 2:
-
-- `TF_BACKEND_RESOURCE_GROUP`: Resource group name (e.g., "rg-terraform-state")
-- `TF_BACKEND_STORAGE_ACCOUNT`: Storage account name (from `$STORAGE_ACCOUNT`)
-- `TF_BACKEND_CONTAINER`: Container name (usually "tfstate")
-
-### Static Web Apps Deployment Tokens
-
-These will be added after initial Terraform deployment:
-
-- `AZURE_STATIC_WEB_APPS_API_TOKEN_DEV`: Dev environment deployment token
-- `AZURE_STATIC_WEB_APPS_API_TOKEN_PROD`: Prod environment deployment token
-
-**Note**: You'll obtain these tokens from Terraform output in Step 5.
-
-## Step 4: GitHub Environments
-
-Create protected environments for approval workflow:
+Create protected environments for the approval gate on `apply` jobs.
 
 ### Development Environment
 
 1. Go to repository Settings → Environments
-2. Click "New environment"
-3. Name: `dev`
-4. Configure protection rules:
-   - Check "Required reviewers"
-   - Add yourself or team members as reviewers
-   - Optional: Set deployment branch to `main`
+2. Click "New environment" → Name: `dev`
+3. Configure protection rules:
+   - Check "Required reviewers" — add yourself or team members
+   - Optional: restrict deployment branch to `main`
 
 ### Production Environment
 
-1. Click "New environment"
-2. Name: `prod`
-3. Configure protection rules:
-   - Check "Required reviewers"
-   - Add yourself or team members as reviewers (recommend 2+ for production)
-   - Optional: Set deployment branch to `tags/*` (release tags only)
+1. Click "New environment" → Name: `prod`
+2. Configure protection rules:
+   - Check "Required reviewers" — recommend 2+ for production
+   - Optional: restrict deployment branch to `main`
 
-## Step 5: Initial Terraform Deployment
+The `AZURE_STATIC_WEB_APPS_API_TOKEN` environment secret is added to each environment **after**
+the first OpenTofu apply completes (see Step 6).
 
-### Option A: Deploy via GitHub Actions (Recommended)
+## Step 6: Initial OpenTofu Deployment (Dev)
 
-#### Initial Setup (Before First Deployment)
+Push code to main — `deploy-infra-dev.yaml` runs automatically. The workflow validates and plans
+on both PRs and pushes; the `apply` job runs on push to main and requires `dev` environment
+approval.
 
-Since the deployment tokens don't exist yet, you'll need to do a two-step process:
-
-1. **First Run** (Infrastructure Only):
-   - Comment out the `deploy-app` job in `.github/workflows/deploy-dev.yml`
-   - Push code to main branch
-   - Approve the infrastructure deployment
-   - Terraform will create the Static Web App
-
-1. **Get Deployment Token**:
-
-   ```bash
-   # Set environment variables
-   export ARM_CLIENT_ID="your-client-id"
-   export ARM_CLIENT_SECRET="your-client-secret"
-   export ARM_SUBSCRIPTION_ID="your-subscription-id"
-   export ARM_TENANT_ID="your-tenant-id"
-
-   # Navigate to dev environment
-   cd deploy/environments/dev
-
-   # Initialize Terraform
-   terraform init \
-     -backend-config="resource_group_name=rg-terraform-state" \
-     -backend-config="storage_account_name=$STORAGE_ACCOUNT" \
-     -backend-config="container_name=tfstate" \
-     -backend-config="key=larios-income-tax-dev.tfstate"
-
-   # Get deployment token
-   terraform output -raw static_web_app_api_key
-   ```
-
-1. **Add Token to GitHub Secrets**:
-   - Copy the output token
-   - Go to GitHub repository Settings → Secrets → Actions
-   - Add new secret: `AZURE_STATIC_WEB_APPS_API_TOKEN_DEV`
-   - Paste the token value
-
-1. **Second Run** (Complete Deployment):
-   - Uncomment the `deploy-app` job in the workflow
-   - Push changes
-   - The workflow will now complete including application deployment
-
-### Option B: Deploy Locally (Testing)
+After the apply completes, retrieve the deployment token:
 
 ```bash
-cd deploy/environments/dev
+cd deploy/infra/dev
 
-# Set environment variables
-export ARM_CLIENT_ID="your-client-id"
-export ARM_CLIENT_SECRET="your-client-secret"
-export ARM_SUBSCRIPTION_ID="your-subscription-id"
+# For local testing, set OIDC-equivalent env vars
+export ARM_CLIENT_ID="your-dev-client-id"
 export ARM_TENANT_ID="your-tenant-id"
+export ARM_SUBSCRIPTION_ID="your-dev-subscription-id"
+export ARM_USE_OIDC="true"   # or use az login for interactive auth
 
-# Initialize Terraform
-terraform init \
+tofu init \
   -backend-config="resource_group_name=rg-terraform-state" \
   -backend-config="storage_account_name=$STORAGE_ACCOUNT" \
-  -backend-config="container_name=tfstate" \
+  -backend-config="container_name=tfstate-dev" \
   -backend-config="key=larios-income-tax-dev.tfstate"
 
-# Plan
-terraform plan
-
-# Apply
-terraform apply
-
-# Get Static Web App URL
-terraform output static_web_app_url
-
-# Get deployment token (save this)
-terraform output -raw static_web_app_api_key
+tofu output -raw api_key
 ```
 
-After Terraform completes, deploy the application using the deployment token:
+Add the token as an **environment secret** in GitHub:
 
-```bash
-# Build the application
-cd ../../..
-npm install
-npm run build
+- Settings → Environments → `dev` → Secrets
+- Secret name: `AZURE_STATIC_WEB_APPS_API_TOKEN`
+- Value: output from the command above
 
-# Deploy using Azure CLI
-az staticwebapp deploy \
-  --app-id "$(cd deploy/environments/dev && terraform output -raw static_web_app_name)" \
-  --resource-group rg-larios-income-tax-dev \
-  --source dist/browser/
-```
+On the next push to main, `deploy-app-dev.yaml` will pick up the token and deploy the application.
 
-## Step 6: Verify Deployment
+## Step 7: Verify Deployment
 
-After successful deployment:
-
-1. Get the Static Web App URL from Terraform outputs:
+1. Get the Static Web App URL from OpenTofu outputs:
 
    ```bash
-   cd deploy/environments/dev
-   terraform output static_web_app_url
+   cd deploy/infra/dev
+   tofu output site_url
    ```
 
-1. Visit the URL in your browser (format: `https://swa-larios-income-tax-dev-*.azurestaticapps.net`)
+1. Visit the URL (`https://swa-larios-income-tax-dev-*.azurestaticapps.net`)
 1. Check Azure Portal:
-   - Resource Groups → rg-larios-income-tax-dev
+   - Resource Groups → `rg-larios-income-tax-dev`
    - Verify all resources are created
    - Check Static Web App deployment history
-   - Check Application Insights for telemetry
 
-## Step 7: Production Deployment
+## Step 8: Production Deployment
 
-### Setup Production Deployment Token
+### Initial Prod Infrastructure
 
-Before creating your first release:
-
-1. Deploy production infrastructure:
+`deploy-infra-prod.yaml` runs on push to main (no PR trigger). Approve the apply in the `prod`
+environment, then retrieve the deployment token:
 
 ```bash
-cd deploy/environments/prod
+cd deploy/infra/prod
 
-# Set environment variables
-export ARM_CLIENT_ID="your-client-id"
-export ARM_CLIENT_SECRET="your-client-secret"
-export ARM_SUBSCRIPTION_ID="your-subscription-id"
-export ARM_TENANT_ID="your-tenant-id"
-
-# Initialize Terraform
-terraform init \
+tofu init \
   -backend-config="resource_group_name=rg-terraform-state" \
   -backend-config="storage_account_name=$STORAGE_ACCOUNT" \
-  -backend-config="container_name=tfstate" \
+  -backend-config="container_name=tfstate-prod" \
   -backend-config="key=larios-income-tax-prod.tfstate"
 
-# Apply
-terraform apply
-
-# Get deployment token
-terraform output -raw static_web_app_api_key
+tofu output -raw api_key
 ```
 
-1. Add token to GitHub Secrets:
-   - Secret name: `AZURE_STATIC_WEB_APPS_API_TOKEN_PROD`
-   - Value: Output from above command
+Add it as an environment secret:
+
+- Settings → Environments → `prod` → Secrets
+- Secret name: `AZURE_STATIC_WEB_APPS_API_TOKEN`
 
 ### Create First Release
 
@@ -283,246 +254,139 @@ terraform output -raw static_web_app_api_key
    ```
 
 1. Create GitHub Release:
-   - Go to repository → Releases → "Create a new release"
-   - Choose tag: v1.0.0
-   - Title: "v1.0.0"
-   - Description: Release notes
-   - Click "Publish release"
+   - Repository → Releases → "Create a new release"
+   - Choose tag: `v1.0.0` → Click "Publish release"
 
-1. Monitor workflow:
-   - Go to Actions → "Deploy to Production"
-   - Approve production deployment when prompted
+1. Monitor Actions → `deploy-app-prod.yaml` — approve the `prod` environment gate when prompted
 
-## Step 8: Custom Domain (Optional)
+## Step 9: Custom Domain (Optional)
 
 ### DNS Configuration
 
 Add a CNAME record pointing to your Static Web App:
 
 ```text
-Type: CNAME
-Name: www (or @ for apex domain with ALIAS/ANAME support)
-Value: swa-larios-income-tax-{env}-RANDOM.azurestaticapps.net
-TTL: 3600
+Type:  CNAME
+Name:  www
+Value: swa-larios-income-tax-prod-RANDOM.azurestaticapps.net
+TTL:   3600
 ```
 
-**Note**: Get the exact hostname from Azure Portal or Terraform output.
+Get the exact hostname from `tofu output site_url` or the Azure Portal.
 
-### Add Custom Domain via Azure Portal
+### Custom Domain via Azure Portal
 
-1. Go to Azure Portal → Static Web App
-2. Settings → Custom domains
-3. Click "+ Add"
-4. Enter your domain name (e.g., <www.lariosincometax.com>)
-5. Select domain provider validation method:
-   - **CNAME**: Use if you added CNAME record
-   - **TXT**: Alternative validation method
-6. Click "Add"
-7. Wait for validation and SSL certificate provisioning (automatic and free)
+1. Azure Portal → Static Web App
+2. Settings → Custom domains → "+ Add"
+3. Enter `www.lariosincometax.com`
+4. Select validation method (CNAME or TXT)
+5. Click "Add" — SSL certificate is provisioned automatically at no extra cost
 
-### Add Custom Domain via Terraform
+### Custom Domain via OpenTofu
 
-Update your Terraform configuration:
+`deploy/infra/prod/terraform.tfvars` already includes:
 
 ```hcl
-# In deploy/environments/prod/terraform.tfvars
-custom_domain = "www.lariosincometax.com"
+custom_domain = "lariosincometax.com"
 ```
 
-Run `terraform apply` to add the custom domain.
-
-### SSL Certificate
-
-SSL certificates are:
-
-- **Automatically provisioned** by Azure
-- **Free** (no additional cost)
-- **Auto-renewed** before expiration
-- **Managed** by Azure (no manual intervention needed)
+OpenTofu manages the custom domain as `www.lariosincometax.com` via the cicd-kit module.
 
 ## Troubleshooting
 
-### Terraform State Lock
+### OpenTofu State Lock
 
-If deployment fails with state lock error:
+If deployment fails with a state lock error:
 
 ```bash
-# List locks
-az lock list --resource-group rg-terraform-state
-
-# If no locks shown, check blob lease
 az storage blob lease break \
-  --container-name tfstate \
+  --container-name tfstate-dev \
   --blob-name larios-income-tax-dev.tfstate \
   --account-name $STORAGE_ACCOUNT
 ```
 
 ### Static Web App Not Loading
 
-Check deployment history:
-
 ```bash
-# List deployments
 az staticwebapp show \
   --name swa-larios-income-tax-dev \
   --resource-group rg-larios-income-tax-dev \
-  --query '{name:name, defaultHostname:defaultHostname, repositoryUrl:repositoryUrl}'
-
-# View in portal
-# Azure Portal → Static Web App → Deployment history
+  --query '{name:name, defaultHostname:defaultHostname}'
 ```
 
 ### Application Routing Issues
 
-Verify `staticwebapp.config.json` is in the repository root:
-
-```bash
-# Check file exists
-cat staticwebapp.config.json
-
-# Verify navigation fallback configuration
-# Should route all non-asset requests to /index.html
-```
+Verify `staticwebapp.config.json` exists in the repository root and is copied into the build output
+by the deploy workflow.
 
 ### GitHub Actions Failures
 
 1. Check Actions logs for specific error
-2. Verify all secrets are configured:
-   - Azure credentials (4 secrets)
-   - Terraform backend (3 secrets)
-   - Deployment tokens (2 secrets)
-3. Ensure service principal has Contributor permissions
-4. Verify deployment token is correct and not expired
+2. Verify all 11 repository variables are configured
+3. Verify OIDC federated credentials are set on each service principal (main push + pull_request)
+4. Verify `AZURE_STATIC_WEB_APPS_API_TOKEN` environment secret is set under Settings → Environments
 
 ### Custom Domain Not Working
 
-1. Verify DNS propagation:
-
 ```bash
-# Check CNAME record
+# Check DNS propagation
 dig www.lariosincometax.com
-
-# Or use nslookup
-nslookup www.lariosincometax.com
 ```
 
-1. Check domain validation status in Azure Portal
-1. Wait for SSL certificate provisioning (can take up to 10 minutes)
+Check domain validation and SSL certificate status in Azure Portal (can take up to 10 minutes).
 
 ## Monitoring
 
 ### Application Insights
 
-Access monitoring data:
-
 ```bash
-# Get Application Insights details
 az monitor app-insights component show \
   --app appi-larios-income-tax-dev \
   --resource-group rg-larios-income-tax-dev
-
-# Query telemetry
-az monitor app-insights query \
-  --app appi-larios-income-tax-dev \
-  --resource-group rg-larios-income-tax-dev \
-  --analytics-query "requests | where timestamp > ago(1h) | summarize count() by bin(timestamp, 5m)"
 ```
 
 ### View Deployment Logs
 
 ```bash
-# List recent deployments
 az staticwebapp show \
   --name swa-larios-income-tax-dev \
   --resource-group rg-larios-income-tax-dev
-
-# Deployment history is also available in GitHub Actions
 ```
+
+Deployment history is also available in GitHub Actions.
 
 ## Cost Management
 
-### Development Environment
+| Environment | Tier     | Cost      |
+| ----------- | -------- | --------- |
+| Dev         | Free     | $0/month  |
+| Prod        | Standard | ~$9/month |
 
-**Estimated monthly cost**: $0 USD (Free tier)
-
-**Features included**:
-
-- 100 GB bandwidth/month
-- 0.5 GB storage
-- Free SSL certificates
-- Global CDN
-
-### Production Environment
-
-**Estimated monthly cost**: $9 USD (Standard tier)
-
-**Features included**:
-
-- 100 GB bandwidth/month (additional: $0.15/GB)
-- 0.5 GB storage
-- Free SSL certificates
-- Global CDN
-- SLA: 99.95% uptime
-
-### Cost Optimization
-
-1. **Use Free tier for dev**: $0/month (current configuration)
-2. **Monitor bandwidth usage**: Additional bandwidth is $0.15/GB
-3. **Use Azure Cost Management**: Track spending
-4. **CDN caching**: Reduces bandwidth usage automatically
-
-### Cost Comparison
-
-**Previous (App Services)**:
-
-- Dev: ~$13/month
-- Prod: ~$73/month
-- Total: ~$86/month
-
-**Current (Static Web Apps)**:
-
-- Dev: $0/month
-- Prod: ~$9/month
-- Total: ~$9/month
-
-**Savings**: 90% (~$77/month or ~$924/year)
+Additional bandwidth beyond 100 GB/month: $0.15/GB.
 
 ## Security Checklist
 
-- [ ] Service principal has minimum required permissions
-- [ ] GitHub secrets are properly configured
-- [ ] HTTPS only is enabled (automatic with Static Web Apps)
-- [ ] SSL certificates are provisioned (automatic)
-- [ ] Application Insights is enabled
-- [ ] Managed identity is configured
-- [ ] Production requires multiple approvers
-- [ ] Custom domains have SSL certificates (automatic)
-- [ ] Security headers configured in staticwebapp.config.json
-- [ ] Deployment tokens are stored securely in GitHub Secrets
+- [ ] Service principals have Contributor role scoped to their subscription only
+- [ ] No client secrets — OIDC federated credentials used exclusively
+- [ ] All 11 non-sensitive IDs stored as repository variables (not secrets)
+- [ ] HTTPS enforced (automatic with Static Web Apps)
+- [ ] SSL certificates provisioned (automatic)
+- [ ] Production environment requires multiple approvers
+- [ ] `AZURE_STATIC_WEB_APPS_API_TOKEN` stored as environment secret under each environment
+- [ ] Security headers configured in `staticwebapp.config.json`
 
 ## Next Steps
 
-1. Configure custom domain (<www.lariosincometax.com>)
+1. Configure custom domain (`www.lariosincometax.com`)
 2. Set up monitoring alerts in Application Insights
 3. Configure staging environments for preview deployments
-4. Set up Azure Functions API if backend functionality is needed
-5. Implement authentication if user accounts are required
-6. Configure backup and disaster recovery (Terraform state already backed up)
-
-## Support
-
-For issues:
-
-- **Azure issues**: Check Azure Portal service health
-- **Terraform issues**: Review state and plan outputs
-- **GitHub Actions**: Check workflow logs
-- **Application issues**: Check Application Insights
-- **Static Web Apps**: Check deployment history in Azure Portal
 
 ## Additional Resources
 
 - [Azure Static Web Apps Documentation](https://docs.microsoft.com/azure/static-web-apps/)
-- [Terraform Azure Provider](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs)
-- [GitHub Actions Documentation](https://docs.github.com/actions)
-- [Static Web Apps Configuration](https://docs.microsoft.com/azure/static-web-apps/configuration)
-- Migration Guide: See `deploy/MIGRATION.md` in repository root for App Services to Static Web Apps migration details
+- [OpenTofu Documentation](https://opentofu.org/docs/)
+- [GitHub Actions OIDC with Azure](https://docs.github.com/en/actions/security-for-github-actions/security-hardening-your-deployments/configuring-openid-connect-in-azure)
+- [azure-static-webapp-cicd-kit](https://github.com/bit-and-byte-ideas/azure-static-webapp-cicd-kit)
+- [CI/CD Pipeline](ci-cd.md)
+- [Azure Infrastructure Architecture](azure-infrastructure.md)
+- [Azure Deployment Checklist](azure-checklist.md)
