@@ -78,12 +78,10 @@ yarn-error.log*
 /site/
 .venv/
 
-# Terraform
+# OpenTofu / Terraform
 **/.terraform/
-**/.terraform.lock.hcl
 **/terraform.tfstate
 **/terraform.tfstate.backup
-**/terraform.tfvars
 **/.terraform.tfstate.lock.info
 **/override.tf
 **/override.tf.json
@@ -91,6 +89,7 @@ yarn-error.log*
 **/*_override.tf.json
 **/crash.log
 **/crash.*.log
+# terraform.tfvars and .terraform.lock.hcl are committed intentionally
 
 # Azure Static Web Apps
 .azure/
