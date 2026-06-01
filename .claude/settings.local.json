@@ -44,7 +44,10 @@
       "Bash(npm run extract-i18n:*)",
       "WebFetch(domain:green-bush-0c265bf0f.4.azurestaticapps.net)",
       "Bash(graphify export *)",
-      "Bash(graphify benchmark *)"
+      "Bash(graphify benchmark *)",
+      "mcp__claude_ai_Linear__get_issue",
+      "mcp__claude_ai_Linear__list_issue_statuses",
+      "mcp__claude_ai_Linear__save_issue"
     ]
   },
   "hooks": {
