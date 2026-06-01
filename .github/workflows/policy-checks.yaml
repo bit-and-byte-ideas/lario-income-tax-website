@@ -1,0 +1,67 @@
+name: Policy Checks
+
+on:
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: policy-checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  opa-tests:
+    name: OPA policy tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup OPA
+        uses: open-policy-agent/setup-opa@v2
+        with:
+          version: latest
+
+      - name: Run Rego unit tests
+        run: opa test policy/ --verbose
+
+  pr-policy:
+    name: PR policy check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup OPA
+        uses: open-policy-agent/setup-opa@v2
+        with:
+          version: latest
+
+      - name: Get changed files
+        id: changed
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          files=$(gh pr view ${{ github.event.pull_request.number }} --json files --jq '[.files[].path]')
+          echo "json=$files" >> "$GITHUB_OUTPUT"
+
+      - name: Build OPA input
+        run: |
+          echo '{"changed_files": ${{ steps.changed.outputs.json }}}' > /tmp/pr_input.json
+          cat /tmp/pr_input.json
+
+      - name: Evaluate PR policy
+        run: |
+          result=$(opa eval \
+            --data policy/pr_checks.rego \
+            --input /tmp/pr_input.json \
+            --format raw \
+            'data.pr_checks.deny')
+
+          echo "Policy result: $result"
+
+          count=$(echo "$result" | jq 'length')
+          if [ "$count" -gt 0 ]; then
+            echo "Policy violations found:"
+            echo "$result" | jq -r '.[]'
+            exit 1
+          fi
+
+          echo "All policy checks passed."
