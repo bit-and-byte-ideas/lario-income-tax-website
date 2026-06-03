@@ -101,3 +101,6 @@ swa-cli.config.json
 
 # Graphify knowledge graph output
 /graphify-out/
+
+# Claude Code local settings (machine-specific permissions and hooks)
+.claude/settings.local.json
