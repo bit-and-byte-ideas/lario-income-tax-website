@@ -1,7 +1,15 @@
 .service-detail-page {
   background-color: var(--color-background);
   padding: var(--spacing-xl) 0;
-  min-height: calc(100vh - 200px);
+  min-height: calc(100dvh - 200px);
+}
+
+.container {
+  max-width: var(--max-width-container);
+  margin: 0 auto;
+  padding: 0 var(--spacing-md);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .service-title {
@@ -81,11 +89,13 @@
 .service-image-card {
   max-width: 100%;
   margin-bottom: 0;
+  overflow: hidden;
 }
 
 .service-image-card img {
   width: 100%;
   height: auto;
+  aspect-ratio: 4 / 3;
   display: block;
   object-fit: cover;
 }
@@ -110,7 +120,7 @@
   line-height: 1.8;
   color: var(--color-secondary-text);
   margin: 0;
-  max-width: 800px;
+  max-width: 65ch;
 }
 
 .contact-details {
@@ -162,6 +172,14 @@
 }
 
 @media (max-width: 640px) {
+  .service-detail-page {
+    padding: var(--spacing-lg) 0;
+  }
+
+  .container {
+    padding: 0 var(--spacing-sm);
+  }
+
   .service-title {
     font-size: 2rem;
   }
