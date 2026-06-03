@@ -19,9 +19,9 @@
   --color-link: #116dff;
   --color-link-hover: #0d54cc;
 
-  --font-primary: 'brandon-grot-w01-light', sans-serif;
-  --font-heading: 'brandon-grot-w01-light', sans-serif;
-  --font-body: 'brandon-grot-w01-light', sans-serif;
+  --font-primary: 'Roboto', sans-serif;
+  --font-heading: 'Roboto', sans-serif;
+  --font-body: 'Roboto', sans-serif;
 
   --max-width-container: 1200px;
   --spacing-xs: 0.5rem;
@@ -48,9 +48,9 @@
   --color-link-hover: rgb(25, 118, 210); /* Lighter blue */
 
   /* Typography - Same fonts */
-  --font-primary: 'brandon-grot-w01-light', sans-serif;
-  --font-heading: 'brandon-grot-w01-light', sans-serif;
-  --font-body: 'brandon-grot-w01-light', sans-serif;
+  --font-primary: 'Roboto', sans-serif;
+  --font-heading: 'Roboto', sans-serif;
+  --font-body: 'Roboto', sans-serif;
 
   /* Layout - Same spacing */
   --max-width-container: 1200px;
@@ -78,9 +78,9 @@
   --color-link-hover: rgb(212, 175, 55); /* Rich gold */
 
   /* Typography - Same fonts */
-  --font-primary: 'brandon-grot-w01-light', sans-serif;
-  --font-heading: 'brandon-grot-w01-light', sans-serif;
-  --font-body: 'brandon-grot-w01-light', sans-serif;
+  --font-primary: 'Roboto', sans-serif;
+  --font-heading: 'Roboto', sans-serif;
+  --font-body: 'Roboto', sans-serif;
 
   /* Layout - Same spacing */
   --max-width-container: 1200px;
