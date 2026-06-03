@@ -83,7 +83,7 @@ describe('ServicesPage', () => {
   });
 
   it('should navigate to service detail page when card is clicked', () => {
-    const navigateSpy = vi.spyOn(router, 'navigate');
+    const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
     const compiled = fixture.nativeElement as HTMLElement;
     const firstCard = compiled.querySelector('.service-card') as HTMLElement;
 
@@ -93,7 +93,7 @@ describe('ServicesPage', () => {
   });
 
   it('should navigate to correct service when different cards are clicked', () => {
-    const navigateSpy = vi.spyOn(router, 'navigate');
+    const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
     const compiled = fixture.nativeElement as HTMLElement;
     const serviceCards = compiled.querySelectorAll('.service-card') as NodeListOf<HTMLElement>;
 
