@@ -10,8 +10,11 @@
 }
 
 .container {
-  padding-left: var(--spacing-md);
-  padding-right: var(--spacing-md);
+  max-width: var(--max-width-container);
+  margin: 0 auto;
+  padding: 0 var(--spacing-md);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .footer-brand {
@@ -129,5 +132,15 @@
     width: 100%;
     min-height: unset;
     height: 1px;
+  }
+}
+
+@media (max-width: 640px) {
+  .footer-top {
+    padding: var(--spacing-lg) 0;
+  }
+
+  .container {
+    padding: 0 var(--spacing-sm);
   }
 }
