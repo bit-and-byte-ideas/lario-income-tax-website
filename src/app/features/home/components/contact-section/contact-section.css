@@ -91,7 +91,7 @@
   align-items: center;
   gap: var(--spacing-md);
   padding: var(--spacing-md);
-  background-color: rgba(255, 255, 255, 0.02);
+  background-color: transparent;
   border-radius: 8px;
   text-decoration: none;
   transition: all 0.3s ease;
@@ -99,8 +99,8 @@
 }
 
 .social-link:hover {
-  background-color: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.1);
+  background-color: var(--color-accent-light);
+  border-color: var(--color-accent-beige);
   transform: translateX(4px);
 }
 
