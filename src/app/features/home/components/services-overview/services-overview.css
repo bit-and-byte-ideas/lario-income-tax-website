@@ -5,6 +5,14 @@
   width: 100%;
 }
 
+.container {
+  max-width: var(--max-width-container);
+  margin: 0 auto;
+  padding: 0 var(--spacing-md);
+  width: 100%;
+  box-sizing: border-box;
+}
+
 .services-overview-heading {
   text-align: center;
   font-size: 2rem;
@@ -118,6 +126,10 @@
 @media (max-width: 640px) {
   .services {
     padding: var(--spacing-md) 0;
+  }
+
+  .container {
+    padding: 0 var(--spacing-sm);
   }
 
   .service-title {
