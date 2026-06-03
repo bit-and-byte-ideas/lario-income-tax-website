@@ -8,7 +8,14 @@
     </h2>
     <div class="services-grid">
       @for (service of featuredServices; track service.id) {
-        <mat-card class="service-card" appearance="outlined">
+        <mat-card
+          class="service-card"
+          appearance="outlined"
+          [routerLink]="['/services', service.id]"
+          role="link"
+          [attr.aria-label]="'Learn more about ' + service.title"
+          i18n-aria-label="Services overview|Service card link aria label"
+        >
           <img
             mat-card-image
             [src]="service.image"
