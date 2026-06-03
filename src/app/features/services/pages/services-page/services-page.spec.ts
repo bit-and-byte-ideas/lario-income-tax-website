@@ -107,7 +107,7 @@ describe('ServicesPage', () => {
   });
 
   it('should call navigateToService method when card is clicked', () => {
-    const navigateSpy = vi.spyOn(component, 'navigateToService');
+    const navigateSpy = vi.spyOn(component, 'navigateToService').mockImplementation(() => {});
     const compiled = fixture.nativeElement as HTMLElement;
     const firstCard = compiled.querySelector('.service-card') as HTMLElement;
 
