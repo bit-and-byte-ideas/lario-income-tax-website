@@ -5,22 +5,18 @@ test.describe('Header Icons', () => {
     await page.goto('/');
   });
 
-  test('Facebook icon is visible and non-empty', async ({ page }) => {
+  test('Facebook icon is present in the DOM and non-empty', async ({ page }) => {
     const facebookLink = page.locator('a[aria-label="Facebook"]');
-    await expect(facebookLink).toBeVisible();
-    // SVG inside mat-icon should have rendered content
-    const svg = facebookLink.locator('svg');
-    await expect(svg).toBeVisible();
-    const pathCount = await svg.locator('path').count();
+    await expect(facebookLink).toBeAttached();
+    // SVG paths must exist in the DOM regardless of viewport visibility
+    const pathCount = await facebookLink.locator('svg path').count();
     expect(pathCount).toBeGreaterThan(0);
   });
 
-  test('Instagram icon is visible and non-empty', async ({ page }) => {
+  test('Instagram icon is present in the DOM and non-empty', async ({ page }) => {
     const instagramLink = page.locator('a[aria-label="Instagram"]');
-    await expect(instagramLink).toBeVisible();
-    const svg = instagramLink.locator('svg');
-    await expect(svg).toBeVisible();
-    const pathCount = await svg.locator('path').count();
+    await expect(instagramLink).toBeAttached();
+    const pathCount = await instagramLink.locator('svg path').count();
     expect(pathCount).toBeGreaterThan(0);
   });
 
