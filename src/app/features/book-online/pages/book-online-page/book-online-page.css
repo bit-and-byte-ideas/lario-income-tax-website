@@ -1,9 +1,17 @@
 .book-online-page {
   background-color: var(--color-background);
   padding: var(--spacing-xl) 0;
-  min-height: calc(100vh - 200px);
+  min-height: calc(100dvh - 200px);
   overflow-x: hidden;
   width: 100%;
+}
+
+.container {
+  max-width: var(--max-width-container);
+  margin: 0 auto;
+  padding: 0 var(--spacing-md);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .services-grid {
@@ -115,6 +123,10 @@
 @media (max-width: 640px) {
   .book-online-page {
     padding: var(--spacing-md) 0;
+  }
+
+  .container {
+    padding: 0 var(--spacing-sm);
   }
 
   .service-title {
