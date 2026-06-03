@@ -18,6 +18,8 @@
   --color-accent-dark: rgb(89, 84, 71);
   --color-link: #116dff;
   --color-link-hover: #0d54cc;
+  --color-secondary-text: rgb(100, 97, 88);
+  --color-primary: #1976d2;
 
   --font-primary: 'Roboto', sans-serif;
   --font-heading: 'Roboto', sans-serif;
@@ -46,6 +48,8 @@
   /* Link Colors - Accessible blue */
   --color-link: rgb(13, 71, 161); /* Deep blue */
   --color-link-hover: rgb(25, 118, 210); /* Lighter blue */
+  --color-secondary-text: rgb(70, 85, 110);
+  --color-primary: rgb(13, 71, 161);
 
   /* Typography - Same fonts */
   --font-primary: 'Roboto', sans-serif;
@@ -76,6 +80,8 @@
   /* Link Colors - Accessible gold tones */
   --color-link: rgb(184, 134, 11); /* Dark gold */
   --color-link-hover: rgb(212, 175, 55); /* Rich gold */
+  --color-secondary-text: rgb(90, 90, 90);
+  --color-primary: rgb(184, 134, 11);
 
   /* Typography - Same fonts */
   --font-primary: 'Roboto', sans-serif;
