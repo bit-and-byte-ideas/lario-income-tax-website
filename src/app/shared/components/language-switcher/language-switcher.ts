@@ -3,7 +3,7 @@ import { CommonModule, DOCUMENT } from '@angular/common';
 
 interface Language {
   code: string;
-  flag: string;
+  flagSrc: string;
   label: string;
   path: string;
 }
@@ -18,8 +18,8 @@ export class LanguageSwitcher {
   currentLocale: string;
 
   languages: Language[] = [
-    { code: 'en-US', flag: '🇺🇸', label: 'English', path: '/' },
-    { code: 'es-MX', flag: '🇲🇽', label: 'Español', path: '/es/' },
+    { code: 'en-US', flagSrc: '/assets/images/us-flag.svg', label: 'English', path: '/' },
+    { code: 'es-MX', flagSrc: '/assets/images/mx-flag.svg', label: 'Español', path: '/es/' },
   ];
 
   constructor(

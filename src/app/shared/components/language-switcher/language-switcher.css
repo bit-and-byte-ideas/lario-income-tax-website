@@ -19,22 +19,24 @@
 }
 
 .language-button:hover:not(:disabled) {
-  border-color: var(--primary-color, #007bff);
+  border-color: var(--color-background);
   transform: scale(1.1);
 }
 
 .language-button.active {
-  border-color: var(--primary-color, #007bff);
-  background-color: rgba(0, 123, 255, 0.1);
+  border-color: var(--color-background);
+  background-color: rgba(255, 255, 255, 0.15);
 }
 
 .language-button:disabled {
   cursor: default;
 }
 
-.flag {
-  font-size: 1.5rem;
-  line-height: 1;
+.flag-icon {
+  width: 24px;
+  height: auto;
+  border-radius: 2px;
+  display: block;
 }
 
 @media (max-width: 768px) {
@@ -43,7 +45,7 @@
     height: 36px;
   }
 
-  .flag {
-    font-size: 1.25rem;
+  .flag-icon {
+    width: 20px;
   }
 }
