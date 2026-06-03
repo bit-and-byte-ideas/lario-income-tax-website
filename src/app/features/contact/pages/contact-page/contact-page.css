@@ -1,7 +1,15 @@
 .contact-page {
   background-color: var(--color-accent-beige);
   padding: var(--spacing-xl) 0;
-  min-height: calc(100vh - 200px);
+  min-height: calc(100dvh - 200px);
+}
+
+.container {
+  max-width: var(--max-width-container);
+  margin: 0 auto;
+  padding: 0 var(--spacing-md);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .contact-heading {
@@ -34,6 +42,8 @@
 .contact-image {
   width: 100%;
   height: auto;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
   display: block;
 }
 
@@ -43,6 +53,7 @@
   color: var(--color-primary-text);
   margin: var(--spacing-md) 0;
   line-height: 1.6;
+  max-width: 65ch;
 }
 
 .call-to-action {
@@ -145,5 +156,15 @@
 
   .map-container {
     height: 300px;
+  }
+}
+
+@media (max-width: 640px) {
+  .contact-page {
+    padding: var(--spacing-lg) 0;
+  }
+
+  .container {
+    padding: 0 var(--spacing-sm);
   }
 }
