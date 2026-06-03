@@ -104,3 +104,7 @@ swa-cli.config.json
 
 # Claude Code local settings (machine-specific permissions and hooks)
 .claude/settings.local.json
+
+# Playwright
+/playwright-report/
+/test-results/
