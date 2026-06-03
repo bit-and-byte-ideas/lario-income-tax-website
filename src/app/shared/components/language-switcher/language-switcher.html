@@ -7,7 +7,7 @@
       [attr.aria-label]="'Switch to ' + language.label"
       [disabled]="isCurrentLanguage(language)"
     >
-      <span class="flag">{{ language.flag }}</span>
+      <img [src]="language.flagSrc" [alt]="language.label" class="flag-icon" />
     </button>
   }
 </div>
